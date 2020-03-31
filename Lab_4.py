@@ -1,35 +1,10 @@
 from itertools import product, combinations
 
 import numpy as np
-from scipy.stats import t, f
+
+from function import *
 
 np.set_printoptions(formatter={'float_kind': lambda x: "%.2f" % (x)})
-
-
-def table_student(prob, n, m):
-    x_vec = [i * 0.0001 for i in range(int(5 / 0.0001))]
-    par = 0.5 + prob / 0.1 * 0.05
-    f3 = (m - 1) * n
-    for i in x_vec:
-        if abs(t.cdf(i, f3) - par) < 0.000005:
-            return i
-
-
-def table_fisher(prob, n, m, d):
-    x_vec = [i * 0.001 for i in range(int(10 / 0.001))]
-    f3 = (m - 1) * n
-    for i in x_vec:
-        if abs(f.cdf(i, n - d, f3) - prob) < 0.0001:
-            return i
-
-
-def make_norm_plan_matrix(plan_matrix, matrix_of_min_and_max_x):
-    X0 = np.mean(matrix_with_min_max_x, axis=1)
-    interval_of_change = np.array([(matrix_of_min_and_max_x[i, 1] - X0[i]) for i in range(len(plan_matrix[0]))])
-    X_norm = np.array(
-        [[round((plan_matrix[i, j] - X0[j]) / interval_of_change[j], 3) for j in range(len(plan_matrix[i]))]
-         for i in range(len(plan_matrix))])
-    return X_norm
 
 
 def cochran_check(Y_matrix):
@@ -39,6 +14,15 @@ def cochran_check(Y_matrix):
     fisher = table_fisher(0.95, N, m, 1)
     Gt = fisher / (fisher + (m - 1) - 2)
     return Gp < Gt
+
+
+def make_norm_plan_matrix(plan_matrix, matrix_of_min_and_max_x):
+    X0 = np.mean(matrix_with_min_max_x, axis=1)
+    interval_of_change = np.array([(matrix_of_min_and_max_x[i, 1] - X0[i]) for i in range(len(plan_matrix[0]))])
+    X_norm = np.array(
+        [[round((plan_matrix[i, j] - X0[j]) / interval_of_change[j], 3) for j in range(len(plan_matrix[i]))]
+         for i in range(len(plan_matrix))])
+    return X_norm
 
 
 def students_t_test(norm_matrix, Y_matrix):
@@ -110,20 +94,21 @@ if cochran_check(Y_matrix):
     check1 = np.sum(b_natura * plan_matr, axis=1)
     check2 = np.sum(b_norm * norm_matrix, axis=1)
     indexes = students_t_test(norm_matrix, Y_matrix)
-    print("Матриця плану експерименту: \n", plan_matr)
-    print("Нормована матриця: \n", norm_matrix)
-    print("Матриця відгуків: \n", Y_matrix)
-    print("Середні значення У: ", mean_Y)
-    print("Натуралізовані коефіціенти: ", b_natura)
-    print("Нормовані коефіціенти: ", b_norm)
-    print("Перевірка 1: ", check1)
-    print("Перевірка 2: ", check2)
-    print("Індекси коефіціентів, які задовольняють критерію Стьюдента: ", np.array(indexes)[0])
-    print("Критерій Стьюдента: ",
+
+    print("The normalized matrix: \n", norm_matrix)
+    print("Experiment Plan Matrix: \n", plan_matr)
+    print("The feedback matrix: \n", Y_matrix)
+    print("The average values of У: ", mean_Y)
+    print("Naturalized coefficients: ", b_natura)
+    print("Normalized coefficients: ", b_norm)
+    print("Check 1: ", check1)
+    print("Check 2: ", check2)
+    print("Indices of coefficients that satisfy the Student's criterion: ", np.array(indexes)[0])
+    print("Student test: ",
           np.sum(b_natura[indexes] * np.reshape(plan_matr[:, indexes], (N, np.size(indexes))), axis=1))
     if phisher_criterion(Y_matrix, np.size(indexes)):
-        print("Рівняння регресії адекватно оригіналу.")
+        print("The regression equation is adequate to the original.")
     else:
-        print("Рівняння регресії неадекватно оригіналу.")
+        print("The regression equation is inadequate to the original.")
 else:
-    print("Дисперсія неоднорідна!")
+    print("The variance is heterogeneous !")
